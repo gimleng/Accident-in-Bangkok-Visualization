@@ -44,6 +44,9 @@
   <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
   <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"
     integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"
+    integrity="sha512-M7nHCiNUOwFt6Us3r8alutZLm9qMt4s9951uo8jqO4UwJ1hziseL6O3ndFyigx6+LREfZqnhHxYjKRJ8ZQ69DQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 
 <body id="page-top">
@@ -103,27 +106,94 @@
     </div>
   </div>
 
-  <div id="accident_modal" class="modal fade" style="--bs-modal-width: 400px;">
-    <div class="modal-dialog" style="top: 50%;left: 30%;">
+  <div id="accident_modal" class="modal fade" style="--bs-modal-width: 1000px;">
+    <div class="modal-dialog" style="top: 0%;">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title"><i class="fa-solid fa-mountain-sun"></i> รายละเอียด</h5>
+          <h5 class="modal-title"><i class="fa-solid fa-mountain-sun"></i> ข้อมูลการเกิดอุบัติเหตุ</h5>
           <!-- <button type="button" class="close" data-bs-dismiss="modal">&times;</button> -->
         </div>
         <form name="accident_modal_form" id="accident_modal_form" method="post">
           <table class="modal_form" border="0" cellspacing="0" cellpadding="10">
             <tr>
-              <td class="modal_font"><i class="fa-solid fa-hashtag"></i> รหัสเขต</td>
-              <td><input class="textInput modal_font" type="text" id="district_code" name="fire_coor" readonly></td>
+              <td class="modal_font"><i class="fa-solid fa-hashtag"></i> <input style="border:none"
+                  class="textInput modal_font" type="text" id="plot_name" name="plot_name" readonly></td>
             </tr>
             <tr>
-              <td class="modal_font"><i class="fa-solid fa-signature"></i> ชื่อเขต</td>
-              <td><input class="textInput modal_font" id="district_name" type="text" name="district_name" readonly></td>
-            </tr>
-            <tr>
-              <td class="modal_font"><i class="fa-solid fa-chart-area"></i> พื้นที่ (ตารางกิโลเมตร)</td>
-              <td><input class="textInput modal_font float" id="district_area" type="text" name="district_area"
-                  readonly></td>
+              <td><svg id="accident_plot" style="width:500px;height:500px"></svg></td>
+              <td>
+                <table class="table table-striped table-sm table-hover">
+                  <thead>
+                    <tr>
+                      <th scope="col">#</th>
+                      <th scope="col">เดือน</th>
+                      <th scope="col">จำนวนการเกิดอุบัติเหตุ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row">1</th>
+                      <td>มกราคม</td>
+                      <td id='count_1'>@mdo</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">2</th>
+                      <td>กุมภาพันธ์</td>
+                      <td id='count_2'>@fat</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">3</th>
+                      <td>มีนาคม</td>
+                      <td id='count_3'>@twitter</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">4</th>
+                      <td>เมษายน</td>
+                      <td id='count_4'>@twitter</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">5</th>
+                      <td>พฤษภาคม</td>
+                      <td id='count_5'>@twitter</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">6</th>
+                      <td>มิถุนายน</td>
+                      <td id='count_6'>@twitter</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">7</th>
+                      <td>กรกฎาคม</td>
+                      <td id='count_7'>@twitter</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">8</th>
+                      <td>สิงหาคม</td>
+                      <td id='count_8'>@twitter</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">9</th>
+                      <td>กันยายน</td>
+                      <td id='count_9'>@twitter</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">10</th>
+                      <td>ตุลาคม</td>
+                      <td id='count_10'>@twitter</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">11</th>
+                      <td>พฤศจิกายน</td>
+                      <td id='count_11'>@twitter</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">12</th>
+                      <td>ธันวาคม</td>
+                      <td id='count_12'>@twitter</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
             </tr>
           </table>
         </form>
@@ -169,21 +239,6 @@
       <a class="navbar-brand"><i class="fa-solid fa-car fa-bounce" style="color: #ffac38;"></i> Accident in Bangkok</a>
 
       <ul class="navbar-nav ms-auto">
-        <!-- <li id="nav_toggle_filter" class="nav-item mx-0 mx-lg-1">
-          <div class="btn-group dropup">
-            <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown"
-              aria-expanded="false">
-              เลือกเวลา
-            </button>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="#">วันที่เริ่ม: <input class="textInput modal_font" type="text" id="start_date"
-                    name="start_date" readonly data-date-ignore-readonly="true" data-date-format="MM/DD/yyyy"></a></li>
-              <li><a class="dropdown-item" href="#">วันที่สิ้นสุด: <input class="textInput modal_font" type="text" id="end_date"
-                    name="end_date" readonly data-date-ignore-readonly="true" data-date-format="MM/DD/yyyy"></a></li>
-            </ul>
-          </div>
-        </li> -->
-
         <li id="nav_toggle_filter" class="nav-item mx-0 mx-lg-1">
           <button class="btn font-weight-bold bg-light rounded" type="button" aria-label="Toggle navigation"
             onclick="date_selection_clicked()">
@@ -230,12 +285,12 @@
       var start_date_day = form_start_date.split('/')[1]
       var start_date_month = form_start_date.split('/')[0]
       var start_date_year = form_start_date.split('/')[2]
-      var start_date_time = new Date(start_date_year + '-' + start_date_month + '-' + start_date_day)
+      var start_date_time = start_date_year + '-' + start_date_month + '-' + start_date_day
 
       var end_date_day = form_end_date.split('/')[1]
       var end_date_month = form_end_date.split('/')[0]
       var end_date_year = form_end_date.split('/')[2]
-      var end_date_time = new Date(end_date_year + '-' + end_date_month + '-' + end_date_day)
+      var end_date_time = end_date_year + '-' + end_date_month + '-' + end_date_day
 
       var bkk_district = L.geoJson(district_geojson, {
         onEachFeature: function (feature, layer) {
@@ -256,16 +311,37 @@
             this.unbindTooltip()
           });
 
-          $.getJSON("data/bkk-accident-itic-2022-2020.json", function (json) {
-            var markers = L.markerClusterGroup({ chunkedLoading: true, removeOutsideVisibleBounds: true })
-            for (i in json) {
-              var date_time_data = new Date(json[i]['start'].split(' ')[0])
-              if (start_date_time < date_time_data && end_date_time > date_time_data) {
-                var point_latlng = new L.latLng(json[i]['latitude'], json[i]['longitude']);
-                markers.addLayer(L.circle(point_latlng))
+          /* use json data instead of PostgreSQL */
+          // $.getJSON("data/bkk-accident-itic-2022-2020.json", function (json) {
+          //   var markers = L.markerClusterGroup({ chunkedLoading: true, removeOutsideVisibleBounds: true })
+          //   for (i in json) {
+          //     var date_time_data = new Date(json[i]['start'].split(' ')[0])
+          //     if (start_date_time < date_time_data && end_date_time > date_time_data) {
+          //       var point_latlng = new L.latLng(json[i]['latitude'], json[i]['longitude']);
+          //       markers.addLayer(L.circle(point_latlng))
+          //     }
+          //   }
+          //   map.addLayer(markers)
+          // })
+
+          /* loading data from PostgreSQL */
+          var markers = L.markerClusterGroup({ chunkedLoading: true, removeOutsideVisibleBounds: true })
+          var date_data_input = [start_date_time, end_date_time]
+          $.ajax({
+            method: "POST",
+            url: "api/bind_point.php",
+            data: { 'date_data_input': date_data_input },
+            success: function (data) {
+              data = JSON.parse(data);
+              let point_array = new Array()
+              for (i in data) {
+                point_array.push([data[i][0], data[i][1]])
               }
+              for (i in point_array) {
+                markers.addLayer(L.marker(point_array[i]))
+              }
+              map.addLayer(markers)
             }
-            map.addLayer(markers)
           })
 
           layer.on('click', function (e) {
@@ -282,6 +358,7 @@
             var district_lng = district_coor.lng + 0.1
             document.getElementById('district_code').value = district_code
             document.getElementById('district_name').value = district_name
+            document.getElementById('plot_name').value = district_name
             document.getElementById('district_area').value = district_area
             document.getElementById('no_male').value = district_male
             document.getElementById('no_female').value = district_female
@@ -311,6 +388,32 @@
         $('#accident_modal').modal('show')
         $(".modal-backdrop").hide();
       }, 100);
+      $.getJSON("data/district_accident_each_month.json", function (json) {
+        var data_list = Array()
+        for (i in json) {
+          var district_name = i.slice(0, -2);
+          if (document.getElementById('plot_name').value == district_name) {
+            var month_no = parseInt(i.slice(-2))
+            data_list.push([month_no, json[i]])
+          }
+        }
+        var data_list_sorted = data_list.sort(function (a, b) {
+          return a[0] - b[0];
+        })
+        document.getElementById("count_1").innerHTML = data_list_sorted[0][1]
+        document.getElementById("count_2").innerHTML = data_list_sorted[1][1]
+        document.getElementById("count_3").innerHTML = data_list_sorted[2][1]
+        document.getElementById("count_4").innerHTML = data_list_sorted[3][1]
+        document.getElementById("count_5").innerHTML = data_list_sorted[4][1]
+        document.getElementById("count_6").innerHTML = data_list_sorted[5][1]
+        document.getElementById("count_7").innerHTML = data_list_sorted[6][1]
+        document.getElementById("count_8").innerHTML = data_list_sorted[7][1]
+        document.getElementById("count_9").innerHTML = data_list_sorted[8][1]
+        document.getElementById("count_10").innerHTML = data_list_sorted[9][1]
+        document.getElementById("count_11").innerHTML = data_list_sorted[10][1]
+        document.getElementById("count_12").innerHTML = data_list_sorted[11][1]
+        histrogram_plot(data_list_sorted)
+      })
     }
 
     /*Basemap switcher*/
@@ -347,7 +450,7 @@
     })
 
     $('#accident_modal').on('hidden.bs.modal', function () {
-      console.log('2')
+      d3.selectAll("#accident_plot > *").remove()
     })
 
     function start_date_setup() {
@@ -394,6 +497,120 @@
       })
     }
 
+    function histrogram_plot(data_list) {
+      var data1 = Array()
+      for (i in data_list) {
+        data1.push({ 'group': data_list[i][0], 'value': data_list[i][1] })
+      }
+      // set the dimensions and margins of the graph
+      var margin = { top: 30, right: 30, bottom: 70, left: 60 },
+        width = 400 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+      // append the svg object to the body of the page
+      var svg = d3.select("#accident_plot")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+      // Initialize the X axis
+      var x = d3.scaleBand()
+        .range([0, width])
+        .padding(0.2);
+      var xAxis = svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+
+      // Initialize the Y axis
+      var y = d3.scaleLinear()
+        .range([height, 0]);
+      var yAxis = svg.append("g")
+        .attr("class", "myYaxis")
+
+      update(data1)
+
+      function update(data) {
+        // Update the X axis
+        x.domain(data.map(function (d) { return d.group; }))
+        xAxis.call(d3.axisBottom(x))
+
+        // Update the Y axis
+        y.domain([0, d3.max(data, function (d) { return d.value })]);
+        yAxis.transition().duration(1000).call(d3.axisLeft(y));
+
+        // Create the u variable
+        var u = svg.selectAll("rect")
+          .data(data)
+
+        u
+          .enter()
+          .append("rect") // Add a new rect for each new elements
+          .merge(u) // get the already existing elements as well
+          .transition() // and apply changes to all of them
+          .duration(1000)
+          .attr("x", function (d) { return x(d.group); })
+          .attr("y", function (d) { return y(d.value); })
+          .attr("width", x.bandwidth())
+          .attr("height", function (d) { return height - y(d.value); })
+          .attr("fill", "#69b3a2")
+
+        // If less group in the new dataset, I delete the ones not in use anymore
+        u
+          .exit()
+          .remove()
+      }
+    }
+
+    function scatter_plot() {
+      const xSize = 500;
+      const ySize = 500;
+      const margin = 40;
+      const xMax = xSize - margin * 2;
+      const yMax = ySize - margin * 2;
+
+      // Create Random Points
+      const numPoints = 100;
+      const data = [];
+      for (let i = 0; i < numPoints; i++) {
+        data.push([Math.random() * xMax, Math.random() * yMax]);
+      }
+
+      // Append SVG Object to the Page
+      const svg = d3.select("#accident_plot")
+        .append("svg")
+        .append("g")
+        .attr("transform", "translate(" + margin + "," + margin + ")");
+
+      // X Axis
+      const x = d3.scaleLinear()
+        .domain([0, 500])
+        .range([0, xMax]);
+
+      svg.append("g")
+        .attr("transform", "translate(0," + yMax + ")")
+        .call(d3.axisBottom(x));
+
+      // Y Axis
+      const y = d3.scaleLinear()
+        .domain([0, 500])
+        .range([yMax, 0]);
+
+      svg.append("g")
+        .call(d3.axisLeft(y));
+
+      // Dots
+      svg.append('g')
+        .selectAll("dot")
+        .data(data).enter()
+        .append("circle")
+        .attr("cx", function (d) { return d[0] })
+        .attr("cy", function (d) { return d[1] })
+        .attr("r", 3)
+        .style("fill", "Red");
+    }
+
     /* time period default */
     document.getElementById("start_date").value = "1/1/2020";
     document.getElementById("to_end_date").value = "1/3/2020";
@@ -401,6 +618,7 @@
     start_date_setup()
     end_date_setup()
     plot_accident_point()
+    histrogram_plot()
 
   </script>
 
