@@ -96,7 +96,7 @@
 
               <td colspan='2'>
                 <div class="d-grid gap-2 md-block"><button type="button" class="btn btn-danger"
-                    onclick='accident_button_clicked()'>ข้อมูลการเกิดอุบัติเหตุ</button></div>
+                    onclick='accident_button_clicked(2020)'>ข้อมูลการเกิดอุบัติเหตุ</button></div>
               </td>
 
             </tr>
@@ -110,14 +110,22 @@
     <div class="modal-dialog" style="top: 0%;">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title"><i class="fa-solid fa-mountain-sun"></i> ข้อมูลการเกิดอุบัติเหตุ</h5>
+          <h5 class="modal-title" id="accident_label_modal"><i class="fa-solid fa-mountain-sun"></i>
+            ข้อมูลการเกิดอุบัติเหตุ</h5>
           <!-- <button type="button" class="close" data-bs-dismiss="modal">&times;</button> -->
         </div>
         <form name="accident_modal_form" id="accident_modal_form" method="post">
           <table class="modal_form" border="0" cellspacing="0" cellpadding="10">
             <tr>
               <td class="modal_font"><i class="fa-solid fa-hashtag"></i> <input style="border:none"
-                  class="textInput modal_font" type="text" id="plot_name" name="plot_name" readonly></td>
+                  class="textInput modal_font" type="text" id="plot_name" name="plot_name" readonly>
+                <button type="button" class="btn btn-outline-secondary" onclick="accident_button_clicked(2020)">ปี
+                  2020</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="accident_button_clicked(2021)">ปี
+                  2021</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="accident_button_clicked(2022)">ปี
+                  2022</button>
+              </td>
             </tr>
             <tr>
               <td><svg id="accident_plot" style="width:500px;height:500px"></svg></td>
@@ -286,11 +294,13 @@
       var start_date_month = form_start_date.split('/')[0]
       var start_date_year = form_start_date.split('/')[2]
       var start_date_time = start_date_year + '-' + start_date_month + '-' + start_date_day
+      var start_date_time_f = new Date(start_date_year + '-' + start_date_month + '-' + start_date_day)
 
       var end_date_day = form_end_date.split('/')[1]
       var end_date_month = form_end_date.split('/')[0]
       var end_date_year = form_end_date.split('/')[2]
       var end_date_time = end_date_year + '-' + end_date_month + '-' + end_date_day
+      var end_date_time_f = new Date(end_date_year + '-' + end_date_month + '-' + end_date_day)
 
       var bkk_district = L.geoJson(district_geojson, {
         onEachFeature: function (feature, layer) {
@@ -310,39 +320,6 @@
             });
             this.unbindTooltip()
           });
-
-          /* use json data instead of PostgreSQL */
-          // $.getJSON("data/bkk-accident-itic-2022-2020.json", function (json) {
-          //   var markers = L.markerClusterGroup({ chunkedLoading: true, removeOutsideVisibleBounds: true })
-          //   for (i in json) {
-          //     var date_time_data = new Date(json[i]['start'].split(' ')[0])
-          //     if (start_date_time < date_time_data && end_date_time > date_time_data) {
-          //       var point_latlng = new L.latLng(json[i]['latitude'], json[i]['longitude']);
-          //       markers.addLayer(L.circle(point_latlng))
-          //     }
-          //   }
-          //   map.addLayer(markers)
-          // })
-
-          /* loading data from PostgreSQL */
-          var markers = L.markerClusterGroup({ chunkedLoading: true, removeOutsideVisibleBounds: true })
-          var date_data_input = [start_date_time, end_date_time]
-          $.ajax({
-            method: "POST",
-            url: "api/bind_point.php",
-            data: { 'date_data_input': date_data_input },
-            success: function (data) {
-              data = JSON.parse(data);
-              let point_array = new Array()
-              for (i in data) {
-                point_array.push([data[i][0], data[i][1]])
-              }
-              for (i in point_array) {
-                markers.addLayer(L.marker(point_array[i]))
-              }
-              map.addLayer(markers)
-            }
-          })
 
           layer.on('click', function (e) {
             var district_code = e.sourceTarget.feature['properties']['dcode']
@@ -369,9 +346,41 @@
             $('#district_detail').modal('show')
             $(".modal-backdrop").hide();
             //$.ajax(... 
-          });
+          })
         }
       })
+      /* use json data instead of PostgreSQL */
+      $.getJSON("data/bkk-accident-itic-2022-2020.json", function (json) {
+        var markers = L.markerClusterGroup({ chunkedLoading: true, removeOutsideVisibleBounds: true })
+        for (i in json) {
+          var date_time_data = new Date(json[i]['start'].split(' ')[0])
+          if (start_date_time_f < date_time_data && end_date_time_f > date_time_data) {
+            var point_latlng = new L.latLng(json[i]['latitude'], json[i]['longitude']);
+            markers.addLayer(L.marker(point_latlng))
+          }
+        }
+        map.addLayer(markers)
+      })
+
+
+
+      /* loading data from PostgreSQL */
+      // var markers = L.markerClusterGroup({ chunkedLoading: true, removeOutsideVisibleBounds: true })
+      // var date_data_input = [start_date_time, end_date_time]
+      // $.ajax({
+      //   method: "POST",
+      //   url: "api/bind_point.php",
+      //   data: { 'date_data_input': date_data_input },
+      //   success: function (data) {
+      //     data = JSON.parse(data);
+      //     var point_list = []
+      //     for (i in data) {
+      //       var marker = L.marker(L.latLng(data[i][0], data[i][1]))
+      //       markers.addLayer(marker)
+      //     }
+      //     map.addLayer(markers)
+      //   }
+      // })
       bkk_district.setStyle({ 'className': 'district_area_class' })
       bkk_district.addTo(map)
     }
@@ -382,18 +391,57 @@
     }
 
     /* On click accident button */
-    function accident_button_clicked() {
+    // function accident_button_clicked() {
+    //   $('#district_detail').modal('hide')
+    //   setTimeout(function () {
+    //     $('#accident_modal').modal('show')
+    //     $(".modal-backdrop").hide();
+    //   }, 100);
+    //   $.getJSON("data/district_accident_each_month.json", function (json) {
+    //     var data_list = Array()
+    //     for (i in json) {
+    //       var district_name = i.slice(0, -2);
+    //       if (document.getElementById('plot_name').value == district_name) {
+    //         var month_no = parseInt(i.slice(-2))
+    //         data_list.push([month_no, json[i]])
+    //       }
+    //     }
+    //     var data_list_sorted = data_list.sort(function (a, b) {
+    //       return a[0] - b[0];
+    //     })
+    //     document.getElementById("count_1").innerHTML = data_list_sorted[0][1]
+    //     document.getElementById("count_2").innerHTML = data_list_sorted[1][1]
+    //     document.getElementById("count_3").innerHTML = data_list_sorted[2][1]
+    //     document.getElementById("count_4").innerHTML = data_list_sorted[3][1]
+    //     document.getElementById("count_5").innerHTML = data_list_sorted[4][1]
+    //     document.getElementById("count_6").innerHTML = data_list_sorted[5][1]
+    //     document.getElementById("count_7").innerHTML = data_list_sorted[6][1]
+    //     document.getElementById("count_8").innerHTML = data_list_sorted[7][1]
+    //     document.getElementById("count_9").innerHTML = data_list_sorted[8][1]
+    //     document.getElementById("count_10").innerHTML = data_list_sorted[9][1]
+    //     document.getElementById("count_11").innerHTML = data_list_sorted[10][1]
+    //     document.getElementById("count_12").innerHTML = data_list_sorted[11][1]
+    //     histrogram_plot(data_list_sorted)
+    //     console.log(data_list_sorted)
+    //   })
+    // }
+
+    function accident_button_clicked(year) {
+      document.getElementById('accident_label_modal').innerHTML = 'ข้อมูลการเกิดอุบัติเหตุ ปี ' + (year).toString()
+      d3.selectAll("#accident_plot > *").remove()
+      var year_selected = year
       $('#district_detail').modal('hide')
       setTimeout(function () {
         $('#accident_modal').modal('show')
         $(".modal-backdrop").hide();
       }, 100);
-      $.getJSON("data/district_accident_each_month.json", function (json) {
+      $.getJSON("data/bkk_district_year.json", function (json) {
         var data_list = Array()
         for (i in json) {
-          var district_name = i.slice(0, -2);
-          if (document.getElementById('plot_name').value == district_name) {
-            var month_no = parseInt(i.slice(-2))
+          var district_name = i.slice(0, -6);
+          var district_year = parseInt(i.slice(-4))
+          if (document.getElementById('plot_name').value == district_name && district_year == year_selected) {
+            var month_no = parseInt(i.slice(-6, -4))
             data_list.push([month_no, json[i]])
           }
         }
@@ -405,13 +453,26 @@
         document.getElementById("count_3").innerHTML = data_list_sorted[2][1]
         document.getElementById("count_4").innerHTML = data_list_sorted[3][1]
         document.getElementById("count_5").innerHTML = data_list_sorted[4][1]
-        document.getElementById("count_6").innerHTML = data_list_sorted[5][1]
-        document.getElementById("count_7").innerHTML = data_list_sorted[6][1]
-        document.getElementById("count_8").innerHTML = data_list_sorted[7][1]
-        document.getElementById("count_9").innerHTML = data_list_sorted[8][1]
-        document.getElementById("count_10").innerHTML = data_list_sorted[9][1]
-        document.getElementById("count_11").innerHTML = data_list_sorted[10][1]
-        document.getElementById("count_12").innerHTML = data_list_sorted[11][1]
+        if (year_selected != 2022) {
+          document.getElementById("count_6").innerHTML = data_list_sorted[5][1]
+          document.getElementById("count_7").innerHTML = data_list_sorted[6][1]
+          document.getElementById("count_8").innerHTML = data_list_sorted[7][1]
+          document.getElementById("count_9").innerHTML = data_list_sorted[8][1]
+          document.getElementById("count_10").innerHTML = data_list_sorted[9][1]
+          document.getElementById("count_11").innerHTML = data_list_sorted[10][1]
+          document.getElementById("count_12").innerHTML = data_list_sorted[11][1]
+        }
+        else {
+          document.getElementById("count_6").innerHTML = 'No data'
+          document.getElementById("count_7").innerHTML = 'No data'
+          document.getElementById("count_8").innerHTML = 'No data'
+          document.getElementById("count_9").innerHTML = 'No data'
+          document.getElementById("count_10").innerHTML = 'No data'
+          document.getElementById("count_11").innerHTML = 'No data'
+          document.getElementById("count_12").innerHTML = 'No data'
+          data_list_sorted.push([6, 0], [7, 0], [8, 0], [9, 0], [10, 0], [11, 0], [12, 0])
+          console.log(data_list_sorted)
+        }
         histrogram_plot(data_list_sorted)
       })
     }
@@ -458,6 +519,8 @@
         format: 'mm/dd/yyyy',
         changeYear: true,
         startDate: '01/01/2020',
+        minDate: new Date(2020, 1, 1),
+        maxDate: new Date(2022, 5, 25),
         autoclose: true,
         onSelect: function (selected) {
           $('#to_end_date').datepicker("option", "minDate", selected);
@@ -481,6 +544,7 @@
         changeYear: true,
         startDate: $('#start_date').val(),
         minDate: $('#start_date').val(),
+        maxDate: new Date(2022, 5, 25),
         autoclose: true,
         onSelect: function (selected) {
           $('#start_date').datepicker("option", "maxDate", selected);
@@ -504,7 +568,7 @@
       }
       // set the dimensions and margins of the graph
       var margin = { top: 30, right: 30, bottom: 70, left: 60 },
-        width = 400 - margin.left - margin.right,
+        width = 470 - margin.left - margin.right,
         height = 500 - margin.top - margin.bottom;
 
       // append the svg object to the body of the page
@@ -563,54 +627,7 @@
       }
     }
 
-    function scatter_plot() {
-      const xSize = 500;
-      const ySize = 500;
-      const margin = 40;
-      const xMax = xSize - margin * 2;
-      const yMax = ySize - margin * 2;
-
-      // Create Random Points
-      const numPoints = 100;
-      const data = [];
-      for (let i = 0; i < numPoints; i++) {
-        data.push([Math.random() * xMax, Math.random() * yMax]);
-      }
-
-      // Append SVG Object to the Page
-      const svg = d3.select("#accident_plot")
-        .append("svg")
-        .append("g")
-        .attr("transform", "translate(" + margin + "," + margin + ")");
-
-      // X Axis
-      const x = d3.scaleLinear()
-        .domain([0, 500])
-        .range([0, xMax]);
-
-      svg.append("g")
-        .attr("transform", "translate(0," + yMax + ")")
-        .call(d3.axisBottom(x));
-
-      // Y Axis
-      const y = d3.scaleLinear()
-        .domain([0, 500])
-        .range([yMax, 0]);
-
-      svg.append("g")
-        .call(d3.axisLeft(y));
-
-      // Dots
-      svg.append('g')
-        .selectAll("dot")
-        .data(data).enter()
-        .append("circle")
-        .attr("cx", function (d) { return d[0] })
-        .attr("cy", function (d) { return d[1] })
-        .attr("r", 3)
-        .style("fill", "Red");
-    }
-
+  
     /* time period default */
     document.getElementById("start_date").value = "1/1/2020";
     document.getElementById("to_end_date").value = "1/3/2020";
